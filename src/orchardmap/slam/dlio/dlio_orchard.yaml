@@ -1,0 +1,73 @@
+# DLIO (Direct LiDAR-Inertial Odometry, vectr-ucla, feature/ros2 branch) - orchard rig.
+#
+# Inputs:
+#   /velodyne_points             VLP-16, header stamp = END of sweep, per-point `time`
+#                                in seconds running about -0.1..0. DLIO's VELODYNE mode
+#                                computes stamp + time, which is exactly right for this, so
+#                                odom/computeTimeOffset MUST stay false (true would shift
+#                                every point +0.1 s assuming a start-stamped sweep).
+#   /camera/camera/imu_fixed     RealSense IMU already rotated into the velodyne axes by
+#                                liosam/imu_fix_quat_node.py (calibrated R_LI), so both
+#                                extrinsics below are identity and base_link == velodyne.
+/**:
+  ros__parameters:
+    version: 1.1.1
+    use_sim_time: true
+
+    frames/odom: odom
+    frames/baselink: base_link
+    frames/lidar: velodyne
+    frames/imu: imu_link
+
+    adaptive: true
+    pointcloud/deskew: true
+    pointcloud/voxelize: true
+
+    map/waitUntilMove: true
+    map/dense/filtered: false
+    map/sparse/leafSize: 0.25
+
+    odom/gravity: 9.80665
+    odom/computeTimeOffset: false
+
+    # The bag starts stationary (GPS: still until ~14 s); play with --start-offset <= 8
+    # so the 3 s calibration window sees no motion.
+    imu/calibration: true
+    odom/imu/approximateGravity: true
+    odom/imu/calibration/gyro: true
+    odom/imu/calibration/accel: true
+    odom/imu/calibration/time: 3.0
+    odom/imu/bufferSize: 5000
+    imu/intrinsics/accel/bias: [0.0, 0.0, 0.0]
+    imu/intrinsics/accel/sm: [1., 0., 0., 0., 1., 0., 0., 0., 1.]
+    imu/intrinsics/gyro/bias: [0.0, 0.0, 0.0]
+
+    extrinsics/baselink2imu/t: [0.0, 0.0, 0.0]
+    extrinsics/baselink2imu/R: [1., 0., 0., 0., 1., 0., 0., 0., 1.]
+    extrinsics/baselink2lidar/t: [0.0, 0.0, 0.0]
+    extrinsics/baselink2lidar/R: [1., 0., 0., 0., 1., 0., 0., 0., 1.]
+
+    odom/preprocessing/cropBoxFilter/size: 1.0
+    odom/preprocessing/voxelFilter/res: 0.25
+
+    odom/keyframe/threshD: 1.0
+    odom/keyframe/threshR: 45.0
+
+    odom/submap/keyframe/knn: 10
+    odom/submap/keyframe/kcv: 10
+    odom/submap/keyframe/kcc: 10
+    odom/gicp/minNumPoints: 64
+    odom/gicp/kCorrespondences: 16
+    odom/gicp/maxCorrespondenceDistance: 0.5
+    odom/gicp/maxIterations: 32
+    odom/gicp/transformationEpsilon: 0.01
+    odom/gicp/rotationEpsilon: 0.01
+    odom/gicp/initLambdaFactor: 1.0e-9
+
+    odom/geo/Kp: 4.5
+    odom/geo/Kv: 11.25
+    odom/geo/Kq: 4.0
+    odom/geo/Kab: 2.25
+    odom/geo/Kgb: 1.0
+    odom/geo/abias_max: 5.0
+    odom/geo/gbias_max: 0.5

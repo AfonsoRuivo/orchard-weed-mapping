@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+title: Orchard weed and tree trunk mapping
+message: >-
+  If you use this software, please cite both the software and the paper it
+  belongs to.
+type: software
+authors:
+  - given-names: Afonso Sabino Sola
+    family-names: Ruivo
+    affiliation: Instituto Superior Tecnico, Universidade de Lisboa
+  - given-names: Alberto
+    family-names: Vale
+    affiliation: >-
+      Instituto de Plasmas e Fusao Nuclear, Instituto Superior Tecnico,
+      Universidade de Lisboa
+license: MIT
+repository-code: https://github.com/OWNER/orchard-weed-mapping
+abstract: >-
+  Pipeline and tools for mapping the weeds and tree trunks of an orchard from
+  a single pass of a ground platform carrying a LiDAR, an IMU, a colour camera
+  and a GNSS receiver, with a GNSS-independent evaluation against a trunk
+  survey.
+keywords:
+  - precision agriculture
+  - LiDAR-inertial odometry
+  - weed mapping
+  - trunk detection
+references:
+  - type: dataset
+    title: >-
+      Orchard multisensor dataset: session CB-11, calibration, trunk survey
+      and labelled images
+    authors:
+      - given-names: Afonso Sabino Sola
+        family-names: Ruivo
+    doi: 10.5281/zenodo.23805668
+  - type: dataset
+    title: "Orchard multisensor dataset: session CA-10"
+    authors:
+      - given-names: Afonso Sabino Sola
+        family-names: Ruivo
+    doi: 10.5281/zenodo.23808549

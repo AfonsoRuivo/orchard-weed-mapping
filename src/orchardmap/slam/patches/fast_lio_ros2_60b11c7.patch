@@ -1,0 +1,186 @@
+diff --git a/config/mid360.yaml b/config/mid360.yaml
+index 6345ff5..207b16f 100644
+--- a/config/mid360.yaml
++++ b/config/mid360.yaml
+@@ -17,7 +17,7 @@
+                                         # This param will take effect no matter what time_sync_en is. So if the time offset is not known exactly, please set as 0.0
+ 
+         preprocess:
+-            lidar_type: 1                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR, 4 for any other pointcloud input
++            lidarype: 1                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR, 4 for any other pointcloud input
+             scan_line:  4
+             blind: 0.5
+             timestamp_unit: 3
+@@ -47,4 +47,4 @@
+         pcd_save:
+             pcd_save_en: true
+             interval: -1                 # how many LiDAR frames saved in each pcd file; 
+-                                        # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
+\ No newline at end of file
++                                        # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
+diff --git a/launch/mapping.launch.py b/launch/mapping.launch.py
+index b76313d..298879f 100644
+--- a/launch/mapping.launch.py
++++ b/launch/mapping.launch.py
+@@ -1,70 +1,63 @@
+ import os.path
+-
+ from ament_index_python.packages import get_package_share_directory
+-
+ from launch import LaunchDescription
+ from launch.actions import DeclareLaunchArgument
+ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+ from launch.conditions import IfCondition
+-
+ from launch_ros.actions import Node
+ 
+-
+ def generate_launch_description():
+     package_path = get_package_share_directory('fast_lio')
+     default_config_path = os.path.join(package_path, 'config')
+-    default_rviz_config_path = os.path.join(
+-        package_path, 'rviz', 'fastlio.rviz')
++    default_rviz_config_path = os.path.join(package_path, 'rviz', 'fastlio.rviz')
+ 
+     use_sim_time = LaunchConfiguration('use_sim_time')
+-    config_path = LaunchConfiguration('config_path')
+-    config_file = LaunchConfiguration('config_file')
+-    rviz_use = LaunchConfiguration('rviz')
+-    rviz_cfg = LaunchConfiguration('rviz_cfg')
+-
+-    declare_use_sim_time_cmd = DeclareLaunchArgument(
+-        'use_sim_time', default_value='false',
+-        description='Use simulation (Gazebo) clock if true'
+-    )
+-    declare_config_path_cmd = DeclareLaunchArgument(
+-        'config_path', default_value=default_config_path,
+-        description='Yaml config file path'
+-    )
+-    decalre_config_file_cmd = DeclareLaunchArgument(
+-        'config_file', default_value='mid360.yaml',
+-        description='Config file'
+-    )
+-    declare_rviz_cmd = DeclareLaunchArgument(
+-        'rviz', default_value='true',
+-        description='Use RViz to monitor results'
+-    )
+-    declare_rviz_config_path_cmd = DeclareLaunchArgument(
+-        'rviz_cfg', default_value=default_rviz_config_path,
+-        description='RViz config file path'
+-    )
+-
+-    fast_lio_node = Node(
+-        package='fast_lio',
+-        executable='fastlio_mapping',
+-        parameters=[PathJoinSubstitution([config_path, config_file]),
+-                    {'use_sim_time': use_sim_time}],
+-        output='screen'
+-    )
+-    rviz_node = Node(
+-        package='rviz2',
+-        executable='rviz2',
+-        arguments=['-d', rviz_cfg],
+-        condition=IfCondition(rviz_use)
+-    )
+-
+-    ld = LaunchDescription()
+-    ld.add_action(declare_use_sim_time_cmd)
+-    ld.add_action(declare_config_path_cmd)
+-    ld.add_action(decalre_config_file_cmd)
+-    ld.add_action(declare_rviz_cmd)
+-    ld.add_action(declare_rviz_config_path_cmd)
+-
+-    ld.add_action(fast_lio_node)
+-    ld.add_action(rviz_node)
+-
+-    return ld
++    config_path  = LaunchConfiguration('config_path')
++    config_file  = LaunchConfiguration('config_file')
++    rviz_use     = LaunchConfiguration('rviz')
++    rviz_cfg     = LaunchConfiguration('rviz_cfg')
++    use_foxglove = LaunchConfiguration('use_foxglove')
++
++    return LaunchDescription([
++        DeclareLaunchArgument('use_sim_time',  default_value='false'),
++        DeclareLaunchArgument('config_path',   default_value=default_config_path),
++        DeclareLaunchArgument('config_file',   default_value='mid360.yaml'),
++        DeclareLaunchArgument('rviz',          default_value='false'),
++        DeclareLaunchArgument('rviz_cfg',      default_value=default_rviz_config_path),
++        # Off by default: the bridge adds load/latency during bag playback
++        DeclareLaunchArgument('use_foxglove',  default_value='false'),
++
++        # camera_init is Fast-LIO2's world frame
++        Node(package='tf2_ros', executable='static_transform_publisher',
++             name='camera_init_to_map',
++             parameters=[{'use_sim_time': use_sim_time}],
++             arguments=['0','0','0','0','0','0','camera_init','map']),
++
++        # body is Fast-LIO2's robot frame — link it to base_link and velodyne
++        Node(package='tf2_ros', executable='static_transform_publisher',
++             name='body_to_base_link',
++             parameters=[{'use_sim_time': use_sim_time}],
++             arguments=['0','0','0','0','0','0','body','base_link']),
++
++        Node(package='tf2_ros', executable='static_transform_publisher',
++             name='body_to_velodyne',
++             parameters=[{'use_sim_time': use_sim_time}],
++             arguments=['0','0','0','0','0','0','body','velodyne']),
++
++        # Fast-LIO2
++        Node(package='fast_lio', executable='fastlio_mapping',
++             parameters=[PathJoinSubstitution([config_path, config_file]),
++                         {'use_sim_time': use_sim_time}],
++             output='screen'),
++
++        # Foxglove bridge (optional)
++        Node(package='foxglove_bridge', executable='foxglove_bridge',
++             name='foxglove_bridge',
++             parameters=[{'port': 8765, 'address': '0.0.0.0'}],
++             condition=IfCondition(use_foxglove)),
++
++        # RViz2 (optional)
++        Node(package='rviz2', executable='rviz2',
++             arguments=['-d', rviz_cfg],
++             condition=IfCondition(rviz_use)),
++    ])
+diff --git a/src/IMU_Processing.hpp b/src/IMU_Processing.hpp
+index f35378f..0a68c4c 100644
+--- a/src/IMU_Processing.hpp
++++ b/src/IMU_Processing.hpp
+@@ -23,7 +23,13 @@
+ 
+ /// *************Preconfiguration
+ 
+-#define MAX_INI_COUNT (10)
++// Orchard IMU never has a clean stationary window near the start of a bag
++// (persistent low-level vibration/motion) - a 1s average is heavily biased
++// by whatever transient acceleration happens to be present in that window,
++// producing a fixed few-degree roll/pitch error baked into init_state.grav
++// for the whole run. Widened to ~30s (6000 samples @ ~200Hz) so the
++// average has time to converge toward the true gravity direction instead.
++#define MAX_INI_COUNT (6000)
+ 
+ const bool time_list(PointType &x, PointType &y) {return (x.curvature < y.curvature);};
+ 
+@@ -191,8 +197,19 @@ void ImuProcess::IMU_init(const MeasureGroup &meas, esekfom::esekf<state_ikfom,
+   }
+   state_ikfom init_state = kf_state.get_x();
+   init_state.grav = S2(- mean_acc / mean_acc.norm() * G_m_s2);
+-  
+-  //state_inout.rot = Eye3d; // Exp(mean_acc.cross(V3D(0, 0, -1 / scale_gravity)));
++
++  // Level the world frame to gravity: without this, world "up" defaults to
++  // whatever the body's raw orientation happened to be at init (identity
++  // rot), so on a vibrating platform the output frame ends up tilted from
++  // true vertical by however much the robot was pitched/rolled at whatever
++  // random instant playback began - not a per-run fluke, a structural bug.
++  // A stationary accelerometer reads +g pointing "up" in body frame, so
++  // aligning mean_acc with world (0,0,1) levels roll/pitch (yaw stays free).
++  {
++    V3D acc_dir = mean_acc.normalized();
++    Eigen::Quaterniond q_level = Eigen::Quaterniond::FromTwoVectors(acc_dir, V3D(0, 0, 1));
++    init_state.rot = SO3(q_level);
++  }
+   init_state.bg  = mean_gyr;
+   init_state.offset_T_L_I = Lidar_T_wrt_IMU;
+   init_state.offset_R_L_I = Lidar_R_wrt_IMU;

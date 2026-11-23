@@ -1,0 +1,289 @@
+diff --git a/config/params.yaml b/config/params.yaml
+index dd334c9..b28dc74 100644
+--- a/config/params.yaml
++++ b/config/params.yaml
+@@ -2,52 +2,51 @@
+   ros__parameters:
+ 
+     # Topics
+-    pointCloudTopic: "/points"                   # Point cloud data
+-    imuTopic: "/imu/data"                        # IMU data
+-    odomTopic: "odometry/imu"                    # IMU pre-preintegration odometry, same frequency as IMU
+-    gpsTopic: "odometry/gpsz"                    # GPS odometry topic from navsat, see module_navsat.launch file
++    pointCloudTopic: "/points"
++    imuTopic: "/imu/data"
++    odomTopic: "odometry/imu"
++    gpsTopic: "odometry/gpsz"
+ 
+     # Frames
+-    lidarFrame: "lidar_link"
++    lidarFrame: "velodyne"
+     baselinkFrame: "base_link"
+     odometryFrame: "odom"
+     mapFrame: "map"
+ 
+     # GPS Settings
+-    useImuHeadingInitialization: false           # if using GPS data, set to "true"
+-    useGpsElevation: false                       # if GPS elevation is bad, set to "false"
+-    gpsCovThreshold: 2.0                         # m^2, threshold for using GPS data
+-    poseCovThreshold: 25.0                       # m^2, threshold for using GPS data
++    useImuHeadingInitialization: false
++    useGpsElevation: false
++    gpsCovThreshold: 2.0
++    poseCovThreshold: 25.0
+ 
+     # Export settings
+-    savePCD: false                               # https://github.com/TixiaoShan/LIO-SAM/issues/3
+-    savePCDDirectory: "/Downloads/LOAM/"         # in your home folder, starts and ends with "/". Warning: the code deletes "LOAM" folder then recreates it. See "mapOptimization" for implementation
++    savePCD: true
++    savePCDDirectory: "/home/afonso/ros2_ws/maps/"
+ 
+     # Sensor Settings
+-    sensor: ouster                               # lidar sensor type, either 'velodyne', 'ouster' or 'livox'
+-    N_SCAN: 64                                   # number of lidar channels (i.e., Velodyne/Ouster: 16, 32, 64, 128, Livox Horizon: 6)
+-    Horizon_SCAN: 512                            # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048, Livox Horizon: 4000)
+-    downsampleRate: 1                            # default: 1. Downsample your data if too many
+-    # points. i.e., 16 = 64 / 4, 16 = 16 / 1
+-    lidarMinRange: 1.0                           # default: 1.0, minimum lidar range to be used
+-    lidarMaxRange: 1000.0                        # default: 1000.0, maximum lidar range to be used
++    sensor: velodyne
++    N_SCAN: 16
++    Horizon_SCAN: 1824
++    downsampleRate: 1
++    lidarMinRange: 1.0
++    lidarMaxRange: 100.0
+ 
+     # IMU Settings
+-    imuAccNoise: 3.9939570888238808e-03
+-    imuGyrNoise: 1.5636343949698187e-03
+-    imuAccBiasN: 6.4356659353532566e-05
+-    imuGyrBiasN: 3.5640318696367613e-05
++    imuType: 0
++    imuAccNoise: 0.0015
++    imuGyrNoise: 0.002
++    imuAccBiasN: 0.0001
++    imuGyrBiasN: 0.00001
++    imuGravity: 9.545
++    imuRPYWeight: 0.05
+ 
+-    imuGravity: 9.80511
+-    imuRPYWeight: 0.01
+-
+-    extrinsicTrans:  [ 0.0,  0.0,  0.0 ]
+-    extrinsicRot:    [-1.0,  0.0,  0.0,
+-                       0.0,  1.0,  0.0,
+-                       0.0,  0.0, -1.0 ]
+-    extrinsicRPY: [ 0.0,  1.0,  0.0,
+-                   -1.0,  0.0,  0.0,
+-                    0.0,  0.0,  1.0 ]
++    extrinsicTrans: [0.21617518162097385, 0.06798842865002652, -0.4227366070249085]
++    extrinsicRot:  [1.0, 0.0, 0.0,
++                    0.0, 1.0, 0.0,
++                    0.0, 0.0, 1.0]
++    extrinsicRPY:  [1.0, 0.0, 0.0,
++                    0.0, 1.0, 0.0,
++                    0.0, 0.0, 1.0]
+ 
+     # LOAM feature threshold
+     edgeThreshold: 1.0
+@@ -55,39 +54,35 @@
+     edgeFeatureMinValidNum: 10
+     surfFeatureMinValidNum: 100
+ 
+-    # voxel filter paprams
+-    odometrySurfLeafSize: 0.4                     # default: 0.4 - outdoor, 0.2 - indoor
+-    mappingCornerLeafSize: 0.2                    # default: 0.2 - outdoor, 0.1 - indoor
+-    mappingSurfLeafSize: 0.4                      # default: 0.4 - outdoor, 0.2 - indoor
++    # Voxel filter params
++    odometrySurfLeafSize: 0.4
++    mappingCornerLeafSize: 0.2
++    mappingSurfLeafSize: 0.4
+ 
+-    # robot motion constraint (in case you are using a 2D robot)
+-    z_tollerance: 1000.0                          # meters
+-    rotation_tollerance: 1000.0                   # radians
++    # Robot motion constraint
++    z_tollerance: 1000.0
++    rotation_tollerance: 1000.0
+ 
+     # CPU Params
+-    numberOfCores: 4                              # number of cores for mapping optimization
+-    mappingProcessInterval: 0.15                  # seconds, regulate mapping frequency
++    numberOfCores: 4
++    mappingProcessInterval: 0.15
+ 
+     # Surrounding map
+-    surroundingkeyframeAddingDistThreshold: 1.0   # meters, regulate keyframe adding threshold
+-    surroundingkeyframeAddingAngleThreshold: 0.2  # radians, regulate keyframe adding threshold
+-    surroundingKeyframeDensity: 2.0               # meters, downsample surrounding keyframe poses   
+-    surroundingKeyframeSearchRadius: 50.0         # meters, within n meters scan-to-map optimization
+-    # (when loop closure disabled)
++    surroundingkeyframeAddingDistThreshold: 1.0
++    surroundingkeyframeAddingAngleThreshold: 0.2
++    surroundingKeyframeDensity: 2.0
++    surroundingKeyframeSearchRadius: 50.0
+ 
+     # Loop closure
+     loopClosureEnableFlag: true
+-    loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
+-    surroundingKeyframeSize: 50                   # submap size (when loop closure enabled)
+-    historyKeyframeSearchRadius: 15.0             # meters, key frame that is within n meters from
+-    # current pose will be considerd for loop closure
+-    historyKeyframeSearchTimeDiff: 30.0           # seconds, key frame that is n seconds older will be
+-    # considered for loop closure
+-    historyKeyframeSearchNum: 25                  # number of hostory key frames will be fused into a
+-    # submap for loop closure
+-    historyKeyframeFitnessScore: 0.3              # icp threshold, the smaller the better alignment
++    loopClosureFrequency: 1.0
++    surroundingKeyframeSize: 50
++    historyKeyframeSearchRadius: 15.0
++    historyKeyframeSearchTimeDiff: 30.0
++    historyKeyframeSearchNum: 25
++    historyKeyframeFitnessScore: 0.3
+ 
+     # Visualization
+-    globalMapVisualizationSearchRadius: 1000.0    # meters, global map visualization radius
+-    globalMapVisualizationPoseDensity: 10.0       # meters, global map visualization keyframe density
+-    globalMapVisualizationLeafSize: 1.0           # meters, global map visualization cloud density
++    globalMapVisualizationSearchRadius: 1000.0
++    globalMapVisualizationPoseDensity: 2.0
++    globalMapVisualizationLeafSize: 0.5
+diff --git a/launch/run.launch.py b/launch/run.launch.py
+index cfde01d..d043f16 100644
+--- a/launch/run.launch.py
++++ b/launch/run.launch.py
+@@ -2,6 +2,7 @@ import os
+ from ament_index_python.packages import get_package_share_directory
+ from launch import LaunchDescription
+ from launch.actions import DeclareLaunchArgument
++from launch.conditions import IfCondition
+ from launch.substitutions import LaunchConfiguration, Command
+ from launch_ros.actions import Node
+ 
+@@ -17,19 +18,41 @@ def generate_launch_description():
+         'params_file',
+         default_value=os.path.join(
+             share_dir, 'config', 'params.yaml'),
+-        description='FPath to the ROS2 parameters file to use.')
++        description='Path to the ROS2 parameters file to use.')
++
++    # Default true so the manual/interactive recipe is unaffected; automated
++    # sweeps pass use_foxglove:=false since the bridge's websocket
++    # serialization is a variable CPU/memory load that can starve the bag
++    # player and confound run-to-run comparisons (see
++    # imu_lidar_yaw_alignment_investigation.md's queue-starvation notes).
++    foxglove_declare = DeclareLaunchArgument(
++        'use_foxglove',
++        default_value='true',
++        description='Start foxglove_bridge (disable for automated sweeps).')
+ 
+     print("urdf_file_name : {}".format(xacro_path))
+ 
+     return LaunchDescription([
+         params_declare,
++        foxglove_declare,
++
++        # --- static TF: map -> odom ---
+         Node(
+             package='tf2_ros',
+             executable='static_transform_publisher',
+             arguments='0.0 0.0 0.0 0.0 0.0 0.0 map odom'.split(' '),
+             parameters=[parameter_file],
+             output='screen'
+-            ),
++        ),
++		Node(
++			package='foxglove_bridge',
++			executable='foxglove_bridge',
++			name='foxglove_bridge',
++			condition=IfCondition(LaunchConfiguration('use_foxglove')),
++			parameters=[{'port': 8765, 'address': '0.0.0.0', 'use_sim_time': True}]
++		),
++
++        # --- robot state publisher ---
+         Node(
+             package='robot_state_publisher',
+             executable='robot_state_publisher',
+@@ -39,20 +62,37 @@ def generate_launch_description():
+                 'robot_description': Command(['xacro', ' ', xacro_path])
+             }]
+         ),
++
++        # --- IMU preintegration ---
++        # Remapped: /imu/data → /camera/camera/imu_fixed (valid quaternion)
+         Node(
+             package='lio_sam',
+             executable='lio_sam_imuPreintegration',
+             name='lio_sam_imuPreintegration',
+             parameters=[parameter_file],
+-            output='screen'
++            output='screen',
++            remappings=[
++                ('/imu/data', '/camera/camera/imu_fixed'),
++            ]
+         ),
++
++        # --- image projection (LiDAR deskewing) ---
++        # Remapped:
++        #   /imu/data → /camera/camera/imu_fixed (valid quaternion)
++        #   /points   → /velodyne_points          (actual LiDAR topic)
+         Node(
+             package='lio_sam',
+             executable='lio_sam_imageProjection',
+             name='lio_sam_imageProjection',
+             parameters=[parameter_file],
+-            output='screen'
++            output='screen',
++            remappings=[
++                ('/imu/data', '/camera/camera/imu_fixed'),
++                ('/points',   '/velodyne_points'),
++            ]
+         ),
++
++        # --- feature extraction ---
+         Node(
+             package='lio_sam',
+             executable='lio_sam_featureExtraction',
+@@ -60,6 +100,8 @@ def generate_launch_description():
+             parameters=[parameter_file],
+             output='screen'
+         ),
++
++        # --- map optimization ---
+         Node(
+             package='lio_sam',
+             executable='lio_sam_mapOptimization',
+@@ -67,11 +109,13 @@ def generate_launch_description():
+             parameters=[parameter_file],
+             output='screen'
+         ),
+-        Node(
+-            package='rviz2',
+-            executable='rviz2',
+-            name='rviz2',
+-            arguments=['-d', rviz_config_file],
+-            output='screen'
+-        )
++
++        # RViz2 disabled - using Foxglove instead
++        # Node(
++        #     package='rviz2',
++        #     executable='rviz2',
++        #     name='rviz2',
++        #     arguments=['-d', rviz_config_file],
++        #     output='screen'
++        # )
+     ])
+diff --git a/src/mapOptmization.cpp b/src/mapOptmization.cpp
+index 1fa4451..0772eb5 100644
+--- a/src/mapOptmization.cpp
++++ b/src/mapOptmization.cpp
+@@ -182,7 +182,7 @@ public:
+             cout << "****************************************************" << endl;
+             cout << "Saving map to pcd files ..." << endl;
+             if(req->destination.empty()) saveMapDirectory = std::getenv("HOME") + savePCDDirectory;
+-            else saveMapDirectory = std::getenv("HOME") + req->destination;
++            else saveMapDirectory = req->destination;
+             cout << "Save destination: " << saveMapDirectory << endl;
+             // create directory and remove old files;
+             int unused = system((std::string("exec rm -r ") + saveMapDirectory).c_str());

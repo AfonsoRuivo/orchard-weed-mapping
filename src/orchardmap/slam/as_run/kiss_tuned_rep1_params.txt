@@ -1,0 +1,2 @@
+params: -p data.max_range:=60.0 -p data.min_range:=1.0 -p mapping.voxel_size:=0.5 -p mapping.max_points_per_voxel:=20 -p adaptive_threshold.initial_threshold:=0.5 -p adaptive_threshold.min_motion_th:=0.1 -p registration.max_num_iterations:=500 -p data.deskew:=false
+filter z_min=-0.45 r_min=0.0

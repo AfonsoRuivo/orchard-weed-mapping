@@ -1,0 +1,48 @@
+diff --git a/include/dlio/odom.h b/include/dlio/odom.h
+index 51641b3..d7f4a77 100755
+--- a/include/dlio/odom.h
++++ b/include/dlio/odom.h
+@@ -159,6 +159,11 @@ private:
+   std::vector<std::shared_ptr<const nano_gicp::CovarianceList>> keyframe_normals;
+   std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> keyframe_transformations;
+   std::mutex keyframes_mutex;
++  // orchard fix 2026-10-07: publishToROS/publishKeyframe run in detached threads and append to the
++  // shared path_ros/kf_pose_ros; without a lock a later thread can reallocate the vector while an
++  // earlier one is still serializing it (fastcdr NotEnoughMemoryException, crashed a full-bag run).
++  std::mutex path_pub_mutex;
++  std::mutex kf_pub_mutex;
+ 
+   // Sensor Type
+   dlio::SensorType sensor;
+diff --git a/src/dlio/odom.cc b/src/dlio/odom.cc
+index 4e9f190..c35b336 100755
+--- a/src/dlio/odom.cc
++++ b/src/dlio/odom.cc
+@@ -363,7 +363,8 @@ void dlio::OdomNode::publishPose() {
+ void dlio::OdomNode::publishToROS(pcl::PointCloud<PointType>::ConstPtr published_cloud, Eigen::Matrix4f T_cloud) {
+   this->publishCloud(published_cloud, T_cloud);
+ 
+-  // nav_msgs::msg::Path
++  // nav_msgs::msg::Path (locked: concurrent publish threads share path_ros)
++  std::lock_guard<std::mutex> path_lock(this->path_pub_mutex);
+   this->path_ros.header.stamp = this->imu_stamp;
+   this->path_ros.header.frame_id = this->odom_frame;
+ 
+@@ -456,7 +457,8 @@ void dlio::OdomNode::publishCloud(pcl::PointCloud<PointType>::ConstPtr published
+ 
+ void dlio::OdomNode::publishKeyframe(std::pair<std::pair<Eigen::Vector3f, Eigen::Quaternionf>, pcl::PointCloud<PointType>::ConstPtr> kf, rclcpp::Time timestamp) {
+ 
+-  // Push back
++  // Push back (locked: concurrent publish threads share kf_pose_ros)
++  std::unique_lock<std::mutex> kf_lock(this->kf_pub_mutex);
+   geometry_msgs::msg::Pose p;
+   p.position.x = kf.first.first[0];
+   p.position.y = kf.first.first[1];
+@@ -471,6 +473,7 @@ void dlio::OdomNode::publishKeyframe(std::pair<std::pair<Eigen::Vector3f, Eigen:
+   this->kf_pose_ros.header.stamp = timestamp;
+   this->kf_pose_ros.header.frame_id = this->odom_frame;
+   this->kf_pose_pub->publish(this->kf_pose_ros);
++  kf_lock.unlock();
+ 
+   // publish keyframe scan for map
+   if (this->vf_use_) {

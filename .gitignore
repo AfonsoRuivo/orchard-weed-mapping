@@ -1,0 +1,32 @@
+# data: never committed, always fetched from Zenodo
+data/
+*.bag
+*.db3
+*.npy
+*.npz
+*.pcd
+*.ply
+
+# satellite imagery is third-party (Esri/Maxar) and georeferenced: keep out
+**/satellite/
+*_world_imagery*
+
+# anything carrying the real orchard coordinates
+**/georeference.json
+**/gnss_raw_source.csv
+
+# build and cache
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+*.egg-info/
+
+# figure output
+out/
+*.pdf
+*.png
+*.jpg
+!docs/img/*.png
+config/paths.py

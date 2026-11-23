@@ -1,0 +1,45 @@
+/**:
+    ros__parameters:
+        feature_extract_enable: false
+        point_filter_num: 4
+        max_iteration: 20
+        filter_size_surf: 0.3
+        filter_size_map: 0.3
+        cube_side_length: 1000.0
+        runtime_pos_log_enable: true
+        map_file_path: "/home/afonso/ros2_ws/maps_fastlio/fastlio_map.pcd"
+        common:
+            lid_topic:  "/velodyne_points"
+            imu_topic:  "/camera/camera/imu_fixed"
+            time_sync_en: false
+            time_offset_lidar_to_imu: 0.0
+        preprocess:
+            lidar_type: 2
+            scan_line: 16
+            blind: 0.15
+            timestamp_unit: 2
+            scan_rate: 10
+        mapping:
+            acc_cov: 1.0
+            gyr_cov: 0.1
+            b_acc_cov: 0.0001
+            b_gyr_cov: 0.00001
+            fov_degree: 360.0
+            det_range: 15.0
+            extrinsic_est_en: false
+            extrinsic_R: [1.0,  0.0,  0.0,
+                          0.0,  1.0,  0.0,
+                          0.0,  0.0,  1.0]
+            extrinsic_T: [0.21617518162097385,
+                          0.06798842865002652,
+                          -0.42273660702490850]
+        publish:
+            path_en: true
+            effect_map_en: false
+            map_en: true
+            scan_publish_en: true
+            dense_publish_en: true
+            scan_bodyframe_pub_en: true
+        pcd_save:
+            pcd_save_en: true
+            interval: -1

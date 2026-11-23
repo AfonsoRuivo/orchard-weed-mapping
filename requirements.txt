@@ -1,0 +1,12 @@
+# Analysis and figures (Python 3.11+). The SLAM estimators and the ROS 2
+# recording stack are not pip packages: see docs/environment.md.
+numpy>=1.26
+scipy>=1.11
+pandas>=2.1
+matplotlib>=3.8
+pillow>=10.0
+opencv-python>=4.8
+scikit-learn>=1.3
+ultralytics>=8.3        # YOLO11n
+open3d>=0.18            # point-cloud I/O and GICP
+pyyaml>=6.0
